@@ -1,0 +1,40 @@
+image: hashicorp/terraform:1.7
+
+variables:
+  TF_ROOT: ${CI_PROJECT_DIR}
+
+stages:
+  - validate
+  - plan
+  - apply
+
+before_script:
+  - terraform --version
+  - terraform init
+
+validate:
+  stage: validate
+  script:
+    - terraform validate
+  only:
+    - main
+
+plan:
+  stage: plan
+  script:
+    - terraform plan -out=tfplan
+  artifacts:
+    paths:
+      - tfplan
+  only:
+    - main
+
+apply:
+  stage: apply
+  script:
+    - terraform apply -auto-approve tfplan
+  dependencies:
+    - plan
+  when: manual
+  only:
+    - main
