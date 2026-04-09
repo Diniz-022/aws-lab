@@ -1,10 +1,6 @@
-cat > .gitlab-ci.yml << 'EOF'
 image:
   name: hashicorp/terraform:1.7
   entrypoint: [""]
-
-variables:
-  TF_ROOT: ${CI_PROJECT_DIR}
 
 stages:
   - validate
@@ -41,4 +37,3 @@ apply:
   when: manual
   only:
     - main
-EOF
