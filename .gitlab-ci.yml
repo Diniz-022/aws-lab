@@ -1,4 +1,10 @@
-image: hashicorp/terraform:1.7
+cat > .gitlab-ci.yml << 'EOF'
+image:
+  name: hashicorp/terraform:1.7
+  entrypoint: [""]
+
+variables:
+  TF_ROOT: ${CI_PROJECT_DIR}
 
 stages:
   - validate
@@ -7,31 +13,32 @@ stages:
 
 before_script:
   - terraform --version
-  - terraform init -input=false
+  - terraform init
 
 validate:
   stage: validate
   script:
     - terraform validate
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
+  only:
+    - main
 
 plan:
   stage: plan
   script:
-    - terraform plan -input=false -out=tfplan
+    - terraform plan -out=tfplan
   artifacts:
     paths:
       - tfplan
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
+  only:
+    - main
 
 apply:
   stage: apply
   script:
-    - terraform apply -input=false -auto-approve tfplan
+    - terraform apply -auto-approve tfplan
   dependencies:
     - plan
   when: manual
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
+  only:
+    - main
+EOF
