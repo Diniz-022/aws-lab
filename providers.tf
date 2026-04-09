@@ -15,11 +15,9 @@ terraform {
     bucket  = "aws-lab-bucket-aws-lab-diniz"
     key     = "terraform/state/terraform.tfstate"
     region  = "us-east-1"
-    profile = "pessoal"
   }
 }
 
 provider "aws" {
-  region  = "us-east-1"
-  profile = "pessoal"
+  region = "us-east-1"
 }
