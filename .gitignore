@@ -1,0 +1,14 @@
+# Terraform
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
+*.tfvars
+crash.log
+
+# Lambda zip gerado automaticamente
+lambda/relatorio_custos.zip
+
+# Mac
+.DS_Store
+output.json
