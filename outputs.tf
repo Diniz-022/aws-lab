@@ -1,45 +1,49 @@
 output "budget_id" {
   description = "ID do budget criado"
-  value       = aws_budgets_budget.alerta_custo.id
-}
-
-output "budget_limit" {
-  description = "Limite do budget"
-  value       = "${aws_budgets_budget.alerta_custo.limit_amount} ${aws_budgets_budget.alerta_custo.limit_unit}"
+  value       = module.budget.budget_id
 }
 
 output "ec2_id" {
-  description = "ID da EC2 criada"
-  value       = aws_instance.lab.id
+  description = "ID da EC2"
+  value       = module.ec2.ec2_id
 }
 
 output "ec2_ip_publico" {
-  description = "IP público da EC2"
-  value       = aws_instance.lab.public_ip
+  description = "IP publico da EC2"
+  value       = module.ec2.ec2_ip_publico
 }
 
 output "ec2_ssh" {
   description = "Comando para conectar via SSH"
-  value       = "ssh -i ~/.ssh/aws-lab-key.pem ec2-user@${aws_instance.lab.public_ip}"
+  value       = "ssh -i ~/.ssh/aws-lab-key.pem ec2-user@${module.ec2.ec2_ip_publico}"
 }
-
 
 output "s3_bucket_nome" {
   description = "Nome do bucket S3"
-  value       = aws_s3_bucket.lab.id
+  value       = module.s3.bucket_id
 }
 
 output "s3_bucket_arn" {
   description = "ARN do bucket S3"
-  value       = aws_s3_bucket.lab.arn
+  value       = module.s3.bucket_arn
 }
 
 output "lambda_nome" {
-  description = "Nome da Lambda de relatório de custos"
-  value       = aws_lambda_function.relatorio_custos.function_name
+  description = "Nome da Lambda"
+  value       = module.lambda.lambda_nome
 }
 
 output "lambda_arn" {
   description = "ARN da Lambda"
-  value       = aws_lambda_function.relatorio_custos.arn
+  value       = module.lambda.lambda_arn
+}
+
+output "api_url" {
+  description = "URL da API Gateway"
+  value       = module.api_gateway.api_url
+}
+
+output "budget_limit" {
+  description = "Limite do budget"
+  value       = "20 USD"
 }
