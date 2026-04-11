@@ -1,3 +1,8 @@
+# ===========================
+# BUDGET - Controle de Custos
+# Alerta quando o gasto mensal
+# atingir 80% e 100% do limite
+# ===========================
 resource "aws_budgets_budget" "alerta_custo" {
   name         = "${var.project_name}-budget"
   budget_type  = "COST"
@@ -21,6 +26,12 @@ resource "aws_budgets_budget" "alerta_custo" {
     subscriber_email_addresses = [var.email_alerta]
   }
 }
+
+# ===========================
+# VPC - Rede
+# Rede isolada na AWS com
+# subnets publica e privada
+# ===========================
 resource "aws_vpc" "main" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
@@ -83,7 +94,11 @@ resource "aws_route_table_association" "publica" {
   route_table_id = aws_route_table.publica.id
 }
 
-
+# ===========================
+# EC2 - Servidor
+# Instancia de lab para
+# testes e aprendizado
+# ===========================
 resource "aws_security_group" "ec2" {
   name        = "${var.project_name}-sg-ec2"
   description = "Security Group para EC2 do lab"
@@ -117,7 +132,7 @@ resource "aws_instance" "lab" {
   vpc_security_group_ids = [aws_security_group.ec2.id]
   key_name               = "aws-lab-key"
   iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
-  
+
   root_block_device {
     volume_size = 8
     volume_type = "gp3"
@@ -129,7 +144,11 @@ resource "aws_instance" "lab" {
   }
 }
 
-
+# ===========================
+# S3 - Armazenamento
+# Bucket com versionamento e
+# bloqueio de acesso publico
+# ===========================
 resource "aws_s3_bucket" "lab" {
   bucket = "aws-lab-bucket-${var.project_name}-diniz"
 
@@ -146,7 +165,6 @@ resource "aws_s3_bucket_versioning" "lab" {
     status = "Enabled"
   }
 }
-
 
 resource "aws_s3_bucket_public_access_block" "lab" {
   bucket = aws_s3_bucket.lab.id
@@ -181,7 +199,11 @@ resource "aws_cloudwatch_metric_alarm" "s3_tamanho" {
   }
 }
 
-
+# ===========================
+# IAM - Permissoes
+# Roles e policies para EC2
+# acessar o S3 com seguranca
+# ===========================
 resource "aws_iam_role" "ec2_s3_role" {
   name = "${var.project_name}-ec2-s3-role"
 
@@ -233,7 +255,11 @@ resource "aws_iam_instance_profile" "ec2_profile" {
   role = aws_iam_role.ec2_s3_role.name
 }
 
-
+# ===========================
+# LAMBDA - Funcao Serverless
+# Gera relatorio de custos AWS
+# e envia por email toda segunda
+# ===========================
 resource "aws_iam_role" "lambda_role" {
   name = "${var.project_name}-lambda-role"
 
@@ -299,6 +325,11 @@ resource "aws_lambda_function" "relatorio_custos" {
   }
 }
 
+# ===========================
+# EVENTBRIDGE - Agendamento
+# Dispara a Lambda toda segunda
+# as 09h horario de Brasilia
+# ===========================
 resource "aws_cloudwatch_event_rule" "toda_segunda" {
   name                = "${var.project_name}-toda-segunda-9h"
   description         = "Dispara toda segunda as 09h horario Brasilia"
@@ -322,4 +353,51 @@ resource "aws_lambda_permission" "allow_eventbridge" {
   function_name = aws_lambda_function.relatorio_custos.function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.toda_segunda.arn
+}
+
+# ===========================
+# API GATEWAY - Endpoint HTTP
+# Expoe a Lambda via URL HTTP
+# para chamadas sob demanda
+# ===========================
+resource "aws_apigatewayv2_api" "lambda_api" {
+  name          = "${var.project_name}-api"
+  protocol_type = "HTTP"
+
+  tags = {
+    Name    = "${var.project_name}-api"
+    Project = var.project_name
+  }
+}
+
+resource "aws_apigatewayv2_stage" "lambda_stage" {
+  api_id      = aws_apigatewayv2_api.lambda_api.id
+  name        = "prod"
+  auto_deploy = true
+
+  tags = {
+    Name    = "${var.project_name}-api-stage"
+    Project = var.project_name
+  }
+}
+
+resource "aws_apigatewayv2_integration" "lambda_integration" {
+  api_id             = aws_apigatewayv2_api.lambda_api.id
+  integration_type   = "AWS_PROXY"
+  integration_uri    = aws_lambda_function.relatorio_custos.invoke_arn
+  integration_method = "POST"
+}
+
+resource "aws_apigatewayv2_route" "lambda_route" {
+  api_id    = aws_apigatewayv2_api.lambda_api.id
+  route_key = "GET /relatorio"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda_integration.id}"
+}
+
+resource "aws_lambda_permission" "allow_api_gateway" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.relatorio_custos.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.lambda_api.execution_arn}/*/*"
 }
