@@ -54,3 +54,14 @@ module "api_gateway" {
   lambda_invoke_arn = module.lambda.lambda_invoke_arn
   lambda_nome       = module.lambda.lambda_nome
 }
+
+# ===========================
+# LAMBIDA PLACAS- SALDO
+# ===========================
+module "lambda_placas" {
+  source        = "./modules/lambda_placas"
+  api_token     = var.api_token_placas
+  email_marcelo = "marcelo.horikoshi@gmail.com"
+  email_pedro   = "pedrohdiniz3@gmail.com"
+}
+

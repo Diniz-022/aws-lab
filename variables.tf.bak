@@ -21,3 +21,8 @@ variable "api_token_placas" {
   type        = string
   sensitive   = true
 }
+variable "api_token_placas" {
+  description = "Token da API wdapi2.com.br"
+  type        = string
+  sensitive   = true
+}
