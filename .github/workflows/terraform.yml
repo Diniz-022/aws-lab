@@ -1,5 +1,4 @@
 name: Terraform
-
 on:
   push:
     branches:
@@ -7,12 +6,11 @@ on:
   pull_request:
     branches:
       - main
-
 env:
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
-
+  TF_VAR_api_token_placas: ${{ secrets.TF_VAR_API_TOKEN_PLACAS }}
 jobs:
   validate:
     name: Validate
@@ -25,7 +23,6 @@ jobs:
         run: terraform init
       - name: Terraform Validate
         run: terraform validate
-
   plan:
     name: Plan
     runs-on: ubuntu-latest
@@ -43,7 +40,6 @@ jobs:
         with:
           name: tfplan
           path: tfplan
-
   apply:
     name: Apply
     runs-on: ubuntu-latest
